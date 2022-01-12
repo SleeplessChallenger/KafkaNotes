@@ -44,10 +44,13 @@ Kafka consists of:
     ** Topic is a stream of data (like *table*). It has a queue where we have our MESSAGES (which can be from various sources)
     ** *Kafka* uses FIFO for TOPIC
     ** MESSAGES are not deleted from TOPIC which makes it possible for MESSAGES to be shared accross various CONSUMERS
-    
-    ** Partitions are for boosting the reading/writing od data (parallelism)
+    ** <b>Partitions</b> are for boosting the reading/writing od data (parallelism)
       - FIFO per partition
       - I.e. we can send MESSAGES of one user to one partition and hence we can get them in order
+      - Topic A -> Broker 1, 2, n -> Partitions per Broker. **Screenshot!**
+        - Why sometimes one Broker can hold all partitions of some Topic? -> Kafka makes balance of all partitions on the Broker, not of the particular Topic. But keep in mind that some Topic can be more weighty
+      - Where is data from TOPIC in the BROKER? -> In `Log files`
+        - Let's look at screenshot of Broker-File-System
 
 
 
