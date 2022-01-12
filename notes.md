@@ -57,13 +57,29 @@ Kafka consists of:
   
   * Producer: MESSAGE sender which writes to `BROKER -> TOPIC -> LEADER partition`
     ** acks: 0 - send once and don't wait for response; 1 - response of success only from **Leader**; -1 (aka `all`) - producer waits for response from ALL ISR + Leader
+    ** Delivery semantic support: at most once, at least once, exactly once (idempotence)
+    ** Steps of `send message`:
+      + fetch metadata: who is **Leader** in Partitions, what is the CLUSTER etc. Who will give response? -> `Zookeeper`
+      + serialize message
+      + define partition: a) explicit definition b) round-robin c) key-defined (key_hash & n) *34 minute of the video*
+      + compress message
+      + accumulate batch
+  * Consumer: MESSAGE reader which reads from `BROKER -> TOPIC -> LEADER partition`
+    ** Steps of `poll messages`:
+      + fetch metadata: resembles one for PRODUCER
+      + start polling LEADER-replicas of all TOPIC partitions
+        - make polling asynchronous. It's named **Consumer Group**: create `group.id`, specify this `id` for CONSUMER, they'll unite under one group. Now, each CONSUMER reads various partitions
+    ** `__consumer_offsets`: if Consumer in Consumer Group reads batch (with i.e. 3 messages) and then falls, next Consumer should know that first 3 messages were read => Consumer **commits** to `__consumer_offsets`
+      - Auto commit (at most once): bad as Consumer can receive batch, send commit, then fall => doesn't read
+      - Manual commit (at least once): after batch was read, `commit` will happen. But here can be duplicates if 2/3 of batch was processed and then Consumer falls -> hence we start reading of this batch by another Consumer from the start
+      - Custom offset management: **exactly once** if such is required
 
 Data replication:
   - `replication-factor` if set > 1 => partition will reside in another BROKER as well. So, if one BROKER falls, data persists on another one.
     + After one BROKER has fallen, Kafka automatically will create new copies of lost partitions so that number of replications matches `replication-factor`
   - Issues with replication: 1. Main replica 2. Data in **followers** can be behind **leaders**
     + 1. Throughout all replicas of partitions there is one that is named **Leader** && others are named **Follower**. CONTROLLER names **Leader** && reading/writing operations are done only with **Leader** replica
-    + 2. ISR (in-sync replicas) is a solution. We write simultaneously to **Leader** && **Follower** which is marked ISR. Other followers *pull* Leader periodically. => ISR follower is a variant for new **Leader** if old one cripples
+    + 2. ISR (in-sync replicas) is a solution. We write simultaneously to **Leader** && **Follower** which is marked ISR. Other followers *poll* Leader periodically. => ISR follower is a variant for new **Leader** if old one cripples
 
 
 
