@@ -12,12 +12,12 @@ EVENTS -> PRODUCERS -> BROKERS -> CONSUMERS
 - we need to send events by producers to consumers
 - in our case we use *Kafka* as Brokers
 
-  * Benefits of using BROKERS:
-    ** reliability & garantee of delivery
-    ** new CONSUMERS can be added easily
-    ** PRODUCERS don't know CONSUMERS
-    ** tech-support
-    ** integration of various tech-stacks
+  * Benefits of using BROKERS:<br>
+    * reliability & garantee of delivery
+    * new CONSUMERS can be added easily
+    * PRODUCERS don't know CONSUMERS
+    * tech-support
+    * integration of various tech-stacks
     
 Kafka consists of:
   - Broker
@@ -27,32 +27,34 @@ Kafka consists of:
   - Producer
   - Consumer
   
-  * Broker (aka Kafka node, server etc): pickup, storage, delivery of messages
-    ** we have many BROKERS for fault tolerance which make KAFKA CLUSTER
-    ** from all of the BROKERS there is one CONTROLLER, which ensures CONSISTENCY
-    ** *Kafka* is a master-slave system
+  * Broker (aka Kafka node, server etc): pickup, storage, delivery of messages<br>
+    * we have many BROKERS for fault tolerance which make KAFKA CLUSTER
+    * from all of the BROKERS there is one CONTROLLER, which ensures CONSISTENCY
+    * *Kafka* is a master-slave system
    
   * Zookeeper: condition of the cluster, configuration, address book (data). **Screen1**
-    ** i.e. to choose a CONTROLLER we use Zookeeper
+    * i.e. to choose a CONTROLLER we use Zookeeper
 
-  * Message consists of:
-    ** Key
-    ** Value: content of the message (bytes)
-    ** Timestamp
-    ** Headers
+  * Message consists of:<br>
+    * Key
+    * Value: content of the message (bytes)
+    * Timestamp
+    * Headers
   
-  * Topic/Partition: **Screen2**
-    ** Topic is a stream of data (like *table*). It has a queue where we have our MESSAGES (which can be from various sources)
-    ** *Kafka* uses FIFO for TOPIC
-    ** MESSAGES are not deleted from TOPIC (after having being read by one CONSUMER) which makes it possible for MESSAGES to be shared accross various CONSUMERS
-    ** <b>Partitions</b> are for boosting the reading/writing of data (parallelism) **Screen3**
+  **Screen2**
+  * Topic/Partition:<br>
+
+    * Topic is a stream of data (like *table*). It has a queue where we have our MESSAGES (which can be from various sources)
+    * *Kafka* uses FIFO for TOPIC
+    * MESSAGES are not deleted from TOPIC (after having being read by one CONSUMER) which makes it possible for MESSAGES to be shared accross various CONSUMERS
+    * <b>Partitions</b> are for boosting the reading/writing of data (parallelism) **Screen3**
       - FIFO per partition
       - I.e. we can send MESSAGES of one user to one partition and hence we can get them in order
       - Broker 1, 2, n -> Topic A, B n -> Partitions per Broker & per Topic.
         - Why sometimes one Broker can hold all partitions of some Topic? -> Kafka makes balance of all partitions on the Broker, not of the particular Topic. But keep in mind that some Topic can be more weighty
       - Where is data from TOPIC in the BROKER? -> In `Log files` **Screen4**
         - Let's look at screenshot of Broker-File-System *15 minute of the video*
-    ** we can't delete TOPIC directly. But there is **TTL** aka time-to-live which deletes *Segments*. If Segment timestamp expired -> to delete (based on the latest timestamp)
+    * we can't delete TOPIC directly. But there is **TTL** aka time-to-live which deletes *Segments*. If Segment timestamp expired -> to delete (based on the latest timestamp)
       + *Segment* timestamp is defined by the biggest timestamp in it
   
   * Producer: MESSAGE sender which writes to `BROKER -> TOPIC -> LEADER partition`
@@ -66,11 +68,11 @@ Kafka consists of:
       + accumulate batch
 
   * Consumer: MESSAGE reader which reads from `BROKER -> TOPIC -> LEADER partition`
-    ** Steps of `poll messages`:
+    * Steps of `poll messages`:
       + fetch metadata: resembles one for PRODUCER
       + start polling LEADER-replicas of all TOPIC partitions
         - make polling asynchronous. It's named **Consumer Group**: create `group.id`, specify this `id` for CONSUMER, they'll unite under one group. Now, each CONSUMER reads various partitions **Screen5**
-    ** `__consumer_offsets`: if Consumer in Consumer Group reads batch (with i.e. 3 messages) and then falls, next Consumer should know that first 3 messages were read => Consumer **commits** to `__consumer_offsets` **Screen6**
+    * `__consumer_offsets`: if Consumer in Consumer Group reads batch (with i.e. 3 messages) and then falls, next Consumer should know that first 3 messages were read => Consumer **commits** to `__consumer_offsets` **Screen6**
       - Auto commit (at most once): bad as Consumer can receive batch, send commit, then fall => doesn't read
       - Manual commit (at least once): after batch was read, `commit` will happen. But here can be duplicates if 2/3 of batch was processed and then Consumer falls -> hence we start reading of this batch by another Consumer from the start. Think about idempotence
       - Custom offset management: **exactly once** if such is required
